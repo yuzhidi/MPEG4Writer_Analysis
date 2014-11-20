@@ -9,7 +9,24 @@ wihleÖĞµÄĞ´ÈëcacheÒòÎªANDROID_DEFAULT_CODEÎª0¶øÃ»ÓĞÖ´ĞĞ£¬ÄÑµÀËµÔ­Éú´úÂëÊÇÕâ¸öÂß¼
 off64_t offset = mIsAvc? mOwner->addLengthPrefixedSample_l(copy)
                                  : mOwner->addSample_l(copy);
 
-mChunkSamples.push_back(copy);addOneStscTableEntry;bufferChunkÍê³Éºó£¬whileÑ­»·¾Í»Øµ½¿ªÊ¼£»
+mChunkSamples.push_back(copy); addOneStscTableEntry; bufferChunkÍê³Éºó£¬while¾Í»Øµ½Ñ­»·Ìõ¼şÅĞ¶Ï£»
+
+while log£º
+1.¶ÁÊı¾İµ½buffer
+2.¼ì²ébufferÖĞµÄµÄÊı¾İ
+3.¿½±´bufferµ½copy
+4.¼ì²éMax file size
+5.moovÏà¹Ø£º(Í¨¹ıgrep -rHn actualused . ¿ÉÒÔÕÒµ½)
+addOneCttsTableEntry
+	addOneSttsTableEntry
+		addOneStssTableEntry     £¨½áÊøÑ­»·ºóÎ´µ÷ÓÃ£©
+			addOneStscTableEntry 
+
+½áÊøÑ­»·£º
+addOneStscTableEntry
+addOneSttsTableEntry
+addOneCttsTableEntry
+
 ##########################################################################################################################################################
 Logic:
 operation:
