@@ -27,6 +27,8 @@ addOneStscTableEntry
 addOneSttsTableEntry
 addOneCttsTableEntry
 
+
+
 ##########################################################################################################################################################
 Logic:
 operation:
@@ -41,23 +43,27 @@ operation:
                                                                     MediaBuffer *copy;                                                                                                                          |
                                                                                                                                                                                       
                                                                                                             
-                                                                    mChunkSamples.push_back(copy);                        
+                                                                    mChunkSamples.push_back(copy); //mChunkSamples:实际数据
                                                                                                                         
-                                                                    MPEG4Writer::Track::bufferChunk(timestampUs);                                                                                      
-                                                                        Chunk chunk(this, timestampUs, mChunkSamples);                                                                                 
+                                                                    MPEG4Writer::Track::bufferChunk(timestampUs); // 注意这里是track                                                                                
+                                                                        Chunk chunk(this, timestampUs, mChunkSamples);    //注意this :owner, mChunkSamples:实际数据
                                                                                     构造函数参数只有时间                                                                                               
-                                                                        mOwner->bufferChunk(chunk);实际调用MPEG4Writer::bufferChunk(const Chunk& chunk)                                                
+                                                                        mOwner->bufferChunk(chunk);实际调用MPEG4Writer::bufferChunk(const Chunk& chunk)              
                                                                                                                                                                                                        
-                                                                            mChunkInfos中找到对应的mTrack                                                                                              
-                                                                            对应的track: it->mChunks.push_back(chunk);                                                                                 
-                                                                                                                                                                                                       
+                                                                            mChunkInfos检查owner(找到对应的mTrack)
+                                                                            对应的track: it->mChunks.push_back(chunk); //数据存入mChunks                                                                      
+                                                                            mBufferedDataSize += chunk.mDataSize;
                                                                             mChunkReadyCondition.signal();                                                                                             
                                                                             到这里可以明白，取数据线程保存samples到chunk                                
                                                               
                                                                         mChunkSamples.clear();    
                                                                                                                  findChunkToWrite(&chunk) 
-                                                                                                                     从mChunkInfos中找到对应track的mChunks，赋给参数chunk
-                                                                                                                 
+                                                                                                                     从mChunkInfos中的取出ChunkInfo，检查ChunkInfo的mChunks是否为不空。
+																													 从不为空的mChunks中找到时间mTimeStampUs最小的一个Chunk的track。
+																													 
+																													 再用该track到mChunkInfos中找到对应的ChunkInfo，将其第一个chunk作为参数返回。
+																														从该ChunkInfo中清除该chunk.
+																												 
                                                                                                                  mChunkReadyCondition.wait(mLock);
                                                                                                                      等待chunk中写入数据
                                                                                                                     然后把chunk中的数据写入file cache

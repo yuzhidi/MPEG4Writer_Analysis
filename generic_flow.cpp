@@ -1,4 +1,5 @@
 做笔记就是一目了然。
+没用各种画图工具，是因为这样，集逻辑，代码于一体。
 (技巧，对于会不断修改的部分，每行最好只有一个内容，便于调整，不好之处是，顶层的代码会因为后面的代码展开而拉得很开，无法折叠:办法，用{})                                                                                            
 有if包裹的代码，首先判断是否执行，要执行再看。
 
@@ -6,6 +7,17 @@
 startWriterThread中的初始化，mChunkInfos是不是应该要两份
 vEncSetForceIframe(true)
 
+track,与trackinfo的使用(能将整个流程串起来。)：
+List<Track *> mTracks;//头文件
+MPEG4Writer::addSource()创建两个Track对象，并把地址放入mTracks
+MPEG4Writer::startWriterThread()创建ChunkInfo。从mTracks取出Track对象,作为ChunkInfo的owner,并将ChunkInfo放入mChunkInfos
+MPEG4Writer::bufferChunk(const Chunk& chunk)中
+
+下面这步很关键：把包含了时间sample数据的chunk，放到对应的
+        if (chunk.mTrack == it->mTrack) {  // Found owner
+            it->mChunks.push_back(chunk);
+
+##########################################################################################################################################################
 
 再看整个流程：
 +---------------------------+
@@ -127,10 +139,10 @@ startMPEG4Recording();
 																																			for (List<Track *>::iterator it = mTracks.begin();
 																																				it != mTracks.end(); ++it) {
 																																				ChunkInfo info;
-																																				info.mTrack = *it;
+																																				info.mTrack = *it;             // leo 这一步很重要！！！
 																																				info.mPrevChunkTimestampUs = 0;
 																																				info.mMaxInterChunkDurUs = 0;
-																																				mChunkInfos.push_back(info);
+																																				mChunkInfos.push_back(info);   // 头文件定义List<ChunkInfo> mChunkInfos;
 																																			}
 																																			mWriterThreadExit = false;
 																																		// 2.开启写入线程
