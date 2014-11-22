@@ -17,6 +17,7 @@ MPEG4Writer::bufferChunk(const Chunk& chunk)中
         if (chunk.mTrack == it->mTrack) {  // Found owner
             it->mChunks.push_back(chunk);
 
+如何从mChunks中取出chunk写入cache，请看另一篇文档中findChunkToWrite(&chunk) 的注释。
 ##########################################################################################################################################################
 
 再看整个流程：
@@ -58,24 +59,33 @@ startMPEG4Recording();
 
 																				sp<MediaSource> mediaSource;
 																				err = setupMediaSource(&mediaSource);
-																													
+																																				{+-------------------------------------------------+
+																													       ------------------>   status_t StagefrightRecorder::setupMediaSource( //解决从camera取数据
+																																				 +-------------------------------------------------+
+																																					sp<CameraSource> cameraSource;
+																																					status_t err = setupCameraSource(&cameraSource);
+																																				}
 																				sp<MediaSource> encoder;
-																				err = setupVideoEncoder(mediaSource, videoBitRate, &encoder);
+																				err = setupVideoEncoder(mediaSource, videoBitRate, &encoder);  //encoder soruce is camera
 																				
-																				writer->addSource(encoder);	
+																				writer->addSource(encoder);	// writer source is encoder
 										                                                                            							{+----------------------------------------------------------------+
 										                                                                            			----------->     status_t MPEG4Writer::addSource(const sp<MediaSource> &source)
 										                                                                            							+----------------------------------------------------------------+
-																																				//创建两个track到mTracks
+																																				//会生成对应的track,外部的调用流程，此处生成video track
 																																				    Track *track = new Track(this, source, 1 + mTracks.size());
-																																					mTracks.push_back(track);
+																																					mTracks.push_back(track);  
 																																					
 																																					mVideoQualityController = new VideoQualityController(this, source);
 																																				}
 																				
 																				*totalBitRate += videoBitRate;
 																				
-																				setupAudioEncoder
+																				setupAudioEncoder(writer);             ------------------------>
+																																					{+----------------------------------------------------------------+
+																																					status_t StagefrightRecorder::setupAudioEncoder(const sp<MediaWriter>& writer)
+																																					 writer->addSource(audioEncoder); //会生成audio track
+																																					}
 																				*totalBitRate += mAudioBitRate;
 																				//writer初始化mInterleaveDurationUs, mLatitudex10000, mLongitudex10000, mMaxFileDurationUs
 																				  mMaxFileSizeBytes, mStartTimeOffsetMs, 
@@ -96,7 +106,7 @@ startMPEG4Recording();
 																			{+-------------------------------------------------+
 															----------->     status_t MPEG4Writer::start(MetaData *param)
 																			+-------------------------------------------------+
-																				MetaData *param初始化mMaxFileSizeLimitBytes,
+																				MetaData *param初始化 mMaxFileSizeLimitBytes,
 																				mIsRealTimeRecording, mVideoQualityController
 																				mArtistTag, mAlbumTag
 																			/*
@@ -127,6 +137,7 @@ startMPEG4Recording();
 																				 //log:mTryStreamableFile:0, mStreamableFile:28, start, 1148
 																				mMdatOffset = mOffset;
 																				write Mdat
+																				
 																				startWriterThread();
 
 																																		{+-------------------------------------------------+
@@ -140,13 +151,14 @@ startMPEG4Recording();
 																																				it != mTracks.end(); ++it) {
 																																				ChunkInfo info;
 																																				info.mTrack = *it;             // leo 这一步很重要！！！
-																																				info.mPrevChunkTimestampUs = 0;
-																																				info.mMaxInterChunkDurUs = 0;
+																																				info.mPrevChunkTimestampUs = 0;// Previous chunk timestamp that has been written
+																																				info.mMaxInterChunkDurUs = 0;// // Max time interval between neighboring chunks
 																																				mChunkInfos.push_back(info);   // 头文件定义List<ChunkInfo> mChunkInfos;
 																																			}
 																																			mWriterThreadExit = false;
 																																		// 2.开启写入线程
 																																			pthread_create(&mThread, &attr, ThreadWrapper, this);
+																																																-------->    writer->threadFunc();
 																																			pthread_attr_destroy(&attr);
 																																			mWriterThreadStarted = true;
 																																			}
@@ -171,9 +183,10 @@ startMPEG4Recording();
 																																																	
 															                                                                                                                           				meta->setInt64(kKeyTime, startTimeUs);作为下一步
 															                                                                                                                           				// To be called before any other methods on this object, except getFormat().
-															                                                                                                                                            
+															                                                                                                                                          //这里可能还要深究一下，关键是时间和第一帧
 																								                                                       							                  	mSource->start(meta.get());(接上)的参数
 																																																	pthread_create(&mThread, &attr, ThreadWrapper, this);
+																																																													-------->  track->threadEntry();
 												                               																									             	}
 																			}
 

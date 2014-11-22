@@ -16,16 +16,8 @@ while log：
 2.检查buffer中的的数据
 3.拷贝buffer到copy
 4.检查Max file size
-5.moov相关：(通过grep -rHn actualused . 可以找到)
-addOneCttsTableEntry
-    addOneSttsTableEntry
-        addOneStssTableEntry     （结束循环后未调用）
-            addOneStscTableEntry 
 
-结束循环：
-addOneStscTableEntry
-addOneSttsTableEntry
-addOneCttsTableEntry
+ 
 
 
 

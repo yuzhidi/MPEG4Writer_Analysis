@@ -1,0 +1,140 @@
+5.moov相关：(通过grep -rHn actualused . 可以找到)
+addOneCttsTableEntry
+    addOneSttsTableEntry
+        addOneStssTableEntry     （结束循环后未调用）
+            addOneStscTableEntry 
+
+结束循环：
+    // 处理 Last chunk
+addOneStscTableEntry
+addOneSttsTableEntry
+addOneCttsTableEntry
+
+void MPEG4Writer::Track::addOneCttsTableEntry(
+        size_t sampleCount, int32_t duration) {
+    if (mIsAudio) {
+        return;
+    }
+    mCttsTableEntries->add(htonl(sampleCount)); 
+    mCttsTableEntries->add(htonl(duration));
+}
+
+void MPEG4Writer::Track::addOneSttsTableEntry(
+        size_t sampleCount, int32_t duration) {
+    if (duration == 0) {
+        ALOGW("0-duration samples found: %d", sampleCount);
+    }
+    mSttsTableEntries->add(htonl(sampleCount));
+    mSttsTableEntries->add(htonl(duration));
+}
+
+void MPEG4Writer::Track::addOneStssTableEntry(size_t sampleId) {
+		ALOGD("[%s],[%d] function enter", __FUNCTION__, __LINE__);
+    mStssTableEntries->add(htonl(sampleId));
+}
+
+void MPEG4Writer::Track::addOneStscTableEntry(
+        size_t chunkId, size_t sampleId) {
+		ALOGD("[%s],[%d] function enter", __FUNCTION__, __LINE__);
+
+        mStscTableEntries->add(htonl(chunkId));
+        mStscTableEntries->add(htonl(sampleId));
+        mStscTableEntries->add(htonl(1));
+}
+
+------------------------------------------------------------------------------------------------------------------------
+
+ Writer thread stopped退出以后：
+ logWriteMoovBox,应该是按流程把每个entry检查一遍。此处以writeStscBox，writeStcoBox为例。
+ 
+ void MPEG4Writer::Track::writeStscBox() {
+    mOwner->beginBox("stsc");
+    mOwner->writeInt32(0);  // version=0, flags=0
+    mStscTableEntries->write(mOwner);
+    mOwner->endBox();  // stsc
+}
+
+void MPEG4Writer::Track::writeStcoBox(bool use32BitOffset) {
+    mOwner->beginBox(use32BitOffset? "stco": "co64");
+    mOwner->writeInt32(0);  // version=0, flags=0
+    if (use32BitOffset) {
+        mStcoTableEntries->write(mOwner);
+    } else {
+        mCo64TableEntries->write(mOwner);
+    }
+    mOwner->endBox();  // stco or co64
+}
+#########################################################################################################################
+R:\mt6595_kk\out\target\product\ckt95_lw_kk\system\lib>cat logWriteMoovBox
+01-04 02:09:11.624 D/MPEG4Writer( 4352): writer thread exit
+01-04 02:09:11.628 D/MPEG4Writer( 4352): Writer thread stopped
+01-04 02:09:11.628 D/MPEG4Writer( 4352): [writeMetaData],[5723] function enter
+01-04 02:09:11.628 D/MPEG4Writer( 4352): writeMetaData ++
+01-04 02:09:11.628 D/MPEG4Writer( 4352): mMdatOffset=24, mOffset=4116674
+01-04 02:09:11.636 D/MPEG4Writer( 4352): call writeMoovBox [writeMetaData],[5806]
+01-04 02:09:11.636 D/MPEG4Writer( 4352): [writeMoovBox],[1571] function enter
+01-04 02:09:11.636 D/MPEG4Writer( 4352): [writeMvhdBox],[1521] function enter
+01-04 02:09:11.638 I/MPEG4Writer( 4352): writeMvhdBox,movieDuratinoInTimeScale=0x4(4))
+01-04 02:09:11.639 D/MPEG4Writer( 4352): writeMoovBox ++
+01-04 02:09:11.639 D/MPEG4Writer( 4352): Video track writeTrackHeader ++, time scale: 90000
+01-04 02:09:11.639 D/MPEG4Writer( 4352): [writeUdtaBox],[5607] function enter
+01-04 02:09:11.639 D/MPEG4Writer( 4352): [writeTkhdBox],[5243] function enter
+01-04 02:09:11.639 I/MPEG4Writer( 4352): writeTkhdBox,tkhdDurationInTimescale(movieTimeScale)=0x4(4)
+01-04 02:09:11.641 D/MPEG4Writer( 4352): [writeMdhdBox],[5363] function enter
+01-04 02:09:11.641 I/MPEG4Writer( 4352): writeMdhdBox,trackDurationInTimeScale(mediaTimeScale)=0x4e685(321157))
+01-04 02:09:11.641 D/MPEG4Writer( 4352): [writeHdlrBox],[5349] function enter
+01-04 02:09:11.642 D/MPEG4Writer( 4352): [writeVmhdBox],[5329] function enter
+01-04 02:09:11.644 D/MPEG4Writer( 4352): [writeDinfBox],[5437] function enter
+01-04 02:09:11.644 D/MPEG4Writer( 4352): [writeDrefBox],[5428] function enter
+01-04 02:09:11.646 D/MPEG4Writer( 4352): [writeUrlBox],[5419] function enter
+01-04 02:09:11.651 D/MPEG4Writer( 4352): [writeStblBox],[5022] function enter
+01-04 02:09:11.652 D/MPEG4Writer( 4352): [writeVideoFourCCBox],[5046] function enter
+01-04 02:09:11.653 D/MPEG4Writer( 4352): [writeAvccBox],[5444] function enter
+01-04 02:09:11.654 D/MPEG4Writer( 4352): [writePaspBox],[5488] function enter
+01-04 02:09:11.657 D/MPEG4Writer( 4352): [writeSttsBox],[5510] function enter
+01-04 02:09:11.657 D/MPEG4Writer( 4352): [getStartTimeOffsetScaledTime],[5496] function enter
+01-04 02:09:11.657 D/MPEG4Writer( 4352): getStartTimeOffsetScaledTime(0us) for Video track
+01-04 02:09:11.659 D/MPEG4Writer( 4352): [writeCttsBox],[5528] function enter
+01-04 02:09:11.659 D/MPEG4Writer( 4352): [writeStssBox],[5557] function enter
+01-04 02:09:11.660 D/MPEG4Writer( 4352): [writeStszBox],[5565] function enter
+01-04 02:09:11.660 D/MPEG4Writer( 4352): writeStszBox for Video track
+01-04 02:09:11.661 D/MPEG4Writer( 4352): [writeStscBox],[5586] function enter
+01-04 02:09:11.663 D/MPEG4Writer( 4352): [writeStcoBox],[5594] function enter
+01-04 02:09:11.667 D/MPEG4Writer( 4352): Video track writeTrackHeader --
+01-04 02:09:11.667 D/MPEG4Writer( 4352): Audio track writeTrackHeader ++, time scale: 48000
+01-04 02:09:11.668 D/MPEG4Writer( 4352): [writeTkhdBox],[5243] function enter
+01-04 02:09:11.668 D/MPEG4Writer( 4352): Audio mStartTimestampUs = 50574, moovStartTimeUs20480
+01-04 02:09:11.668 I/MPEG4Writer( 4352): writeTkhdBox,tkhdDurationInTimescale(movieTimeScale)=0x4(4)
+01-04 02:09:11.676 D/MPEG4Writer( 4352): [writeMdhdBox],[5363] function enter
+01-04 02:09:11.676 I/MPEG4Writer( 4352): writeMdhdBox,trackDurationInTimeScale(mediaTimeScale)=0x291a5(168357))
+01-04 02:09:11.677 D/MPEG4Writer( 4352): [writeHdlrBox],[5349] function enter
+01-04 02:09:11.682 D/MPEG4Writer( 4352): [writeSmhdBox],[5340] function enter
+01-04 02:09:11.684 D/MPEG4Writer( 4352): [writeDinfBox],[5437] function enter
+01-04 02:09:11.684 D/MPEG4Writer( 4352): [writeDrefBox],[5428] function enter
+01-04 02:09:11.685 D/MPEG4Writer( 4352): [writeUrlBox],[5419] function enter
+01-04 02:09:11.687 D/MPEG4Writer( 4352): [writeStblBox],[5022] function enter
+01-04 02:09:11.688 D/MPEG4Writer( 4352): [writeAudioFourCCBox],[5116] function enter
+01-04 02:09:11.689 D/MPEG4Writer( 4352): [writeMp4aEsdsBox],[5159] function enter
+01-04 02:09:11.697 D/MPEG4Writer( 4352): [writeSttsBox],[5510] function enter
+01-04 02:09:11.697 D/MPEG4Writer( 4352): [getStartTimeOffsetScaledTime],[5496] function enter
+01-04 02:09:11.697 D/MPEG4Writer( 4352): getStartTimeOffsetScaledTime(30094us) for Audio track
+01-04 02:09:11.698 D/MPEG4Writer( 4352): [writeCttsBox],[5528] function enter
+01-04 02:09:11.698 D/MPEG4Writer( 4352): [writeStszBox],[5565] function enter
+01-04 02:09:11.698 D/MPEG4Writer( 4352): writeStszBox for Audio track
+01-04 02:09:11.699 D/MPEG4Writer( 4352): [writeStscBox],[5586] function enter
+01-04 02:09:11.700 D/MPEG4Writer( 4352): [writeStcoBox],[5594] function enter
+01-04 02:09:11.704 D/MPEG4Writer( 4352): Audio track writeTrackHeader --
+01-04 02:09:11.705 D/MPEG4Writer( 4352): writeMoovBox --
+01-04 02:09:11.705 D/MPEG4Writer( 4352): writeMetaData --
+01-04 02:09:11.705 D/MPEG4Writer( 4352): release, closing mFd=189
+01-04 02:09:11.707 D/MPEG4Writer( 4352): reset --
+01-04 02:09:11.707 D/MPEG4Writer( 4352): ~MPEG4Writer
+01-04 02:09:11.707 D/MPEG4Writer( 4352): reset ++
+01-04 02:09:11.707 D/MPEG4Writer( 4352): video ~Track
+01-04 02:09:11.707 D/MPEG4Writer( 4352): Stopping Video track
+01-04 02:09:11.707 D/MPEG4Writer( 4352): video ~Track done
+01-04 02:09:11.707 D/MPEG4Writer( 4352): audio ~Track
+01-04 02:09:11.707 D/MPEG4Writer( 4352): Stopping Audio track
+01-04 02:09:11.707 D/MPEG4Writer( 4352): audio ~Track done
+01-04 02:09:11.712 D/MPEG4Writer( 4352): mWritedChunks.size=8
+01-04 02:09:11.712 D/MPEG4Writer( 4352): ~MPEG4Writer done
