@@ -17,6 +17,10 @@
 	01-06 03:32:35.621 D/MPEG4Writer( 4350): [start], [2857], startTimeUs:4751835177
 	01-06 03:32:35.621 I/MPEG4Writer( 4350): Start time offset: 700000 us
 	01-06 03:32:35.621 D/MPEG4Writer( 4350): [start], [2861], startTimeUs:4752535177    //最终的startTimeUs就是在原来的基础上加了70000
+	01-06 04:04:04.156 D/MPEG4Writer( 5410): In while threadEntry, 4004
+	01-06 04:04:04.157 I/MPEG4Writer( 5410): [threadEntry], [4075], isCodecConfig:1     //第一帧带codec config
+	01-06 04:04:04.181 D/MPEG4Writer( 5410): In while threadEntry, 4004
+	01-06 04:04:04.181 I/MPEG4Writer( 5410): [threadEntry], [4075], isCodecConfig:1
 	01-06 03:32:36.033 D/MPEG4Writer( 4350): Video mStartTimestampUs=16892us
 	01-06 03:32:36.114 D/MPEG4Writer( 4350): Audio mStartTimestampUs=105915us
 	01-06 03:32:37.042 D/MPEG4Writer( 4350): Audio mStartTimestampUs = 105915, moovStartTimeUs16892: //反复测试, moovStartTimeUs就是mStartTimestampUs，Video mStartTimestampUs
