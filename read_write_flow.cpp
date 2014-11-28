@@ -14,9 +14,10 @@ mChunkSamples.push_back(copy); addOneStscTableEntry; bufferChunkÍê³Éºó£¬while¾Í»
 while log£º
 1.¶ÁÊı¾İµ½buffer
 2.¼ì²ébufferÖĞµÄµÄÊı¾İ
-3.¿½±´bufferµ½copy
-4.¼ì²éMax file size
+3.¼ì²éMax file size
+4.¼ì²ésizeÍ¨¹ı£¬Ôò¿½±´bufferµ½copy
 
+##threadEntryÖ»×öÒ»¼şÊÂÇé£¬bufferChunk, update moov boxs.##
  
 
 

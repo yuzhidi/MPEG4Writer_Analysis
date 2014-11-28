@@ -84,6 +84,7 @@ startMPEG4Recording();
 																				setupAudioEncoder(writer);             ------------------------>
 																																					{+----------------------------------------------------------------+
 																																					status_t StagefrightRecorder::setupAudioEncoder(const sp<MediaWriter>& writer)
+																																					+----------------------------------------------------------------+
 																																					 writer->addSource(audioEncoder); //»áÉú³Éaudio track
 																																					}
 																				*totalBitRate += mAudioBitRate;
